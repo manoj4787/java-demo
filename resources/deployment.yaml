@@ -14,4 +14,4 @@ spec:
     spec:
       containers:
         - name: java-demo
-          image: sen31088/java-demo:{{theversion}}
+          image: manoj4787/java-demo:{{theversion}}

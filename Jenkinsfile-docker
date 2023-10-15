@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-        registry = "sen31088"  // Replace with your Docker registry URL
-        DOCKERHUB_CREDENTIALS= credentials('docker-sen31088')
+        registry = "manoj4787"  // Replace with your Docker registry URL
+        DOCKERHUB_CREDENTIALS= credentials('docker-manoj4787')
         imageName = "java-demo"  // Replace with your desired image name
-        containerName = "java-app-container"  // Replace with your desired container name
+        containerName = "sch-java-container"  // Replace with your desired container name
         dockerfilePath = "./Dockerfile"  // Replace with the path to your Dockerfile
         dockerArgs = "-p 8081:8080"  // Replace with your desired container arguments
         //version = sh(script: 'jq \'.version\' version.json', returnStdout: true).trim()
@@ -20,7 +20,7 @@ pipeline {
         }
         stage('SCM'){
             steps {
-                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'sen', url: 'https://github.com/sen31088/java-demo.git']])
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'manoj4787', url: 'https://github.com/manoj4787/java-demo.git']])
             }
         }
         
@@ -51,30 +51,26 @@ pipeline {
             }
         }
 
-        stage('Code Analysis') {
+       /* stage('Code Analysis') {
             steps {
                 sh "/opt/maven/bin/mvn clean verify sonar:sonar \
                     -Dsonar.projectKey=java-demo \
                     -Dsonar.host.url=http://sonar.manolabs.co.in:9000 \
                     -Dsonar.login=sqp_bb71945b9028eba3aa847768a63b8d4f4b622dfb"
             }
-        }
+        }*/
 
 
         stage('Deploy') {
             steps {
                 sh '''
-                ssh root@10.0.1.207 <<  EOF
-                
-                docker rm  -f ${containerName} 1> /dev/null 2>&1
+                export KUBECONFIG=/var/lib/jenkins/kubeconfig
 
-                sleep 5
+                 sed -i "s/{{theversion}}/$version/g" resources/deployment.yaml
 
-                docker run -d --name ${containerName} ${dockerArgs} ${registry}/${imageName}:${version}
-
-                exit
-
-                EOF
+                 kubectl apply -f deployment.yaml
+                 
+                 kubectl apply -f service.yaml
 
                 '''
             }
